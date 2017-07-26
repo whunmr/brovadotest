@@ -1,11 +1,12 @@
 import unittest
-from hypothesis import given
-from hypothesis.strategies import text, lists, integers, floats, tuples, booleans, sampled_from
+from hypothesis import given, settings
+from hypothesis.strategies import text, lists, integers, floats, tuples, booleans, sampled_from, sets, builds, binary, datetimes
 from hypothesis import example
 from hypothesis import note
 from hypothesis import assume
 from math import isnan
 from hypothesis import find
+from dateutil.parser import parse
 
 def encode(input_string):
     if not input_string:
@@ -40,6 +41,8 @@ def decode(lst):
 
 @given(s=text())
 @example(s='')
+@example("Hello world")
+@example(s="Some very long string")
 def test_decode_inverts_encode(s):
     assert decode(encode(s)) == s
     assert len(s.upper()) == len(s)
@@ -107,11 +110,15 @@ def test_negation_is_self_inverse_for_non_nan(x):
 
 #####################################################################################
 
+
 class TestStringMethods(unittest.TestCase):
     def test_upper(self):
         self.assertEqual('foo'.upper(), 'FOO')
         print find(lists(integers()), lambda x: sum(x) >= 10)
+        print find(lists(integers()), lambda x: sum(x) >= 10 and len(x) >= 3)
+        print find(sets(integers()), lambda x: sum(x) >= 10 and len(x) >= 3)
         #print tuples(integers(), integers()).example()
+        #find(integers(), lambda x: False)
 
 
 
@@ -123,4 +130,14 @@ class TestTryReallyHard(unittest.TestCase):
     def execute_example(self, f):
         f()
         return f()
+
+
+#####################################################################################
+@given(lists(integers()))
+@settings(max_examples=5)
+def test_sorting_list_of_integers(xs):
+    assume(len(xs) > 1)
+    res = sorted(xs)
+    assert isinstance(res, list)
+    assert all(x <= y for x, y in zip(res, res[1:]))
 
